@@ -42,6 +42,7 @@ const RESPECTS_INLINE_HINTS = new Set([
   "google-vertex-messages",
   "bedrock-converse",
   "openrouter",
+  "digitalocean",
 ])
 
 const makeHint = (ttlSeconds: number | undefined): CacheHint =>
