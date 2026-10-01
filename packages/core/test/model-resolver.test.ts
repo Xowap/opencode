@@ -151,7 +151,6 @@ describe("ModelResolver", () => {
         "moonshotai-cn": "moonshot-chat",
         zhipuai: "zai-chat",
         "zhipuai-coding-plan": "zai-coding-chat",
-        digitalocean: "digitalocean",
         cerebras: "openai-compatible-chat",
         deepinfra: "openai-compatible-chat",
         groq: "openai-compatible-chat",
@@ -167,7 +166,7 @@ describe("ModelResolver", () => {
         expect(String(selected.provider)).toBe(providerID)
         expect(selected.route.id).toBe(route)
         expect(selected.route.endpoint.baseURL).toBe("https://provider.example/v1/openai")
-        const prepared = yield* compileRequest(LLM.request({ model: selected, prompt: "Hello", cache: "none" }))
+        const prepared = yield* compileRequest(LLM.request({ model: selected, prompt: "Hello" }))
         expect(prepared.body.messages).toEqual([{ role: "user", content: "Hello" }])
         expect(prepared.body).not.toHaveProperty("apiKey")
       }

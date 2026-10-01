@@ -1,14 +1,26 @@
-import { describe, expect } from "bun:test"
+import { describe, expect, test } from "bun:test"
 import { Effect } from "effect"
-import { CacheHint, LLM, Message, ToolDefinition } from "../../src/index.js"
+import { CacheHint, LLM } from "../../src/index.js"
 import { compileRequest } from "../../src/route/client.js"
-import * as DigitalOcean from "../../src/providers/digitalocean.js"
+import { DigitalOcean } from "../../src/providers/digitalocean.js"
 import { it } from "../lib/effect.js"
 import { fixedResponse } from "../lib/http.js"
 import { sseEvents } from "../lib/sse.js"
 import { LLMClient } from "../../src/route.js"
 
 describe("DigitalOcean", () => {
+  test("preserves package entrypoint headers and body overrides", () => {
+    const model = DigitalOcean.model("anthropic-claude-fable-5.1", {
+      apiKey: "test-key",
+      headers: { "X-Test": "fixture" },
+      body: { temperature: 0 },
+    })
+    expect(model.route.defaults?.http).toMatchObject({
+      headers: { "X-Test": "fixture" },
+      body: { temperature: 0 },
+    })
+  })
+
   it.effect("prepares DigitalOcean models with default endpoint and auth", () =>
     Effect.gen(function* () {
       const model = DigitalOcean.configure({ apiKey: "test-key" }).model("anthropic-claude-fable-5.1")

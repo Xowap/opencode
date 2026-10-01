@@ -1,11 +1,11 @@
 import type { ProviderPackage } from "../provider-package.js"
 import { OpenAIChat } from "../protocols/openai-chat.js"
-import { newBreakpoints, ttlBucket } from "../protocols/utils/cache.js"
+import { cacheControl } from "../protocols/utils/cache.js"
 import { AuthOptions, type ProviderAuthOption } from "../route/auth-options.js"
 import { Route, type RouteDefaultsInput } from "../route/client.js"
 import { Endpoint } from "../route/endpoint.js"
 import { Protocol } from "../route/protocol.js"
-import { ProviderID, type CacheHint, type ModelID } from "../schema/index.js"
+import { ProviderID, type ModelID } from "../schema/index.js"
 import type { OpenAIProviderOptionsInput } from "./openai-options.js"
 
 export const id = ProviderID.make("digitalocean")
@@ -17,23 +17,7 @@ export type LanguageModelOptions = Omit<RouteDefaultsInput, "providerOptions"> &
     readonly providerOptions?: OpenAIProviderOptionsInput
   }
 
-export type Settings = ProviderPackage.Settings &
-  OpenAIProviderOptionsInput & {
-    readonly apiKey?: string
-    readonly baseURL?: string
-  }
-
-const cacheControl = () => {
-  const breakpoints = newBreakpoints(4)
-  return (cache: CacheHint | undefined) => {
-    if (cache === undefined || breakpoints.remaining === 0) return undefined
-    breakpoints.remaining -= 1
-    return {
-      type: "ephemeral" as const,
-      ...(ttlBucket(cache.ttlSeconds) === "1h" ? { ttl: "1h" } : {}),
-    }
-  }
-}
+export type Settings = ProviderPackage.Settings & OpenAIProviderOptionsInput & { readonly apiKey?: string }
 
 export const protocol = Protocol.make({
   id: "digitalocean-chat",
@@ -84,8 +68,8 @@ export const model: ProviderPackage.Definition<Settings, OpenAIProviderOptionsIn
   configure({
     apiKey,
     baseURL,
-    headers: headers === undefined ? undefined : { ...headers },
-    http: body === undefined ? undefined : { body: { ...body } },
+    headers,
+    http: { body },
     providerOptions,
   }).model(modelID)
 

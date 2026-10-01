@@ -212,7 +212,7 @@ const OpenAIChatUsage = Schema.StructWithRest(
     prompt_tokens: optionalNull(Schema.Number),
     completion_tokens: optionalNull(Schema.Number),
     total_tokens: optionalNull(Schema.Number),
-    // Zai reports cache hits as top-level `cached_tokens`; DeepSeek uses `prompt_cache_hit_tokens`; DigitalOcean uses `cache_read_input_tokens` and `cache_created_input_tokens`.
+    // Provider-specific cache accounting fields.
     cached_tokens: optionalNull(Schema.Number),
     prompt_cache_hit_tokens: optionalNull(Schema.Number),
     cache_read_input_tokens: optionalNull(Schema.Number),
@@ -911,14 +911,13 @@ const mapUsage = (usage: OpenAIChatEvent["usage"], providerMetadataKey: string):
   if (!usage) return undefined
   const input = usage.prompt_tokens ?? undefined
   const output = usage.completion_tokens ?? undefined
-  const cached = (usage.prompt_tokens_details?.cached_tokens ??
-    (usage as { prompt_cache_hit_tokens?: number | null }).prompt_cache_hit_tokens ??
-    (usage as { cached_tokens?: number | null }).cached_tokens ??
-    (usage as { cache_read_input_tokens?: number | null }).cache_read_input_tokens ??
-    undefined) as number | undefined
-  const cacheWrite = (usage.prompt_tokens_details?.cache_write_tokens ??
-    (usage as { cache_created_input_tokens?: number | null }).cache_created_input_tokens ??
-    undefined) as number | undefined
+  const cached =
+    usage.prompt_tokens_details?.cached_tokens ??
+    usage.prompt_cache_hit_tokens ??
+    usage.cached_tokens ??
+    usage.cache_read_input_tokens ??
+    undefined
+  const cacheWrite = usage.prompt_tokens_details?.cache_write_tokens ?? usage.cache_created_input_tokens ?? undefined
   const reasoning = usage.completion_tokens_details?.reasoning_tokens ?? undefined
   const nonCached = ProviderShared.subtractTokens(input, ProviderShared.sumTokens(cached, cacheWrite))
   return new Usage({
